@@ -121,6 +121,35 @@ h1{text-align:center;font-size:18px;color:var(--pink);margin-bottom:8px}
 #vs{width:100%;padding:12px;font-size:14px;font-family:inherit;background:var(--green);color:#fff;border:none;border-radius:20px;cursor:pointer;opacity:.4;transition:opacity .2s}
 #vs.active{opacity:1}
 body{padding-bottom:140px}
+
+/* ⑬ Ripple */
+.rpc{flex:1;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:var(--r);overflow:hidden;position:relative}
+.rpc img{border-radius:0;width:100%;display:block}
+.rpc .rpf{position:relative;z-index:1;transition:opacity .4s ease,transform .4s ease,filter .4s ease}
+.rpc .rpb{position:absolute;top:0;left:0;width:100%;z-index:0;clip-path:circle(0% at var(--rx,50%) var(--ry,50%));transition:clip-path .7s cubic-bezier(.25,.46,.45,.94)}
+.rpc.sel .rpf{opacity:0;transform:scale(1.06);filter:blur(4px)}
+.rpc.sel .rpb{clip-path:circle(150% at var(--rx,50%) var(--ry,50%))}
+.rpc:not(.sel).dim{filter:brightness(.5)}
+
+/* ⑭ Hologram */
+.hoc{flex:1;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:var(--r);overflow:hidden;position:relative}
+.hoc img{border-radius:0;width:100%;display:block}
+.hoc .hof{position:relative;z-index:1;transition:opacity .5s,filter .6s}
+.hoc .hob{position:absolute;top:0;left:0;width:100%;z-index:0}
+.hoc::after{content:'';position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:var(--r);background:linear-gradient(120deg,transparent 25%,rgba(255,80,200,.35) 38%,rgba(80,200,255,.35) 50%,rgba(200,255,80,.35) 62%,transparent 75%);background-size:300% 100%;animation:holoMove 2s linear infinite;mix-blend-mode:screen}
+@keyframes holoMove{0%{background-position:200% 0%}100%{background-position:-200% 0%}}
+.hoc.sel .hof{opacity:0;filter:saturate(5) brightness(2.5)}
+.hoc:not(.sel).dim{filter:brightness(.5)}
+
+/* ⑮ Flipbook */
+.fbc{flex:1;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:var(--r);overflow:hidden;position:relative;perspective:400px}
+.fbc img{border-radius:0;width:100%;display:block}
+.fbc .fbf{position:relative;z-index:1;transform-origin:top center;backface-visibility:hidden}
+.fbc .fbb{position:absolute;top:0;left:0;width:100%;z-index:0}
+.fbc.flip .fbf{animation:pageFlip .45s steps(8) forwards}
+@keyframes pageFlip{0%{transform:rotateX(0);opacity:1}50%{transform:rotateX(-90deg);opacity:.4}100%{transform:rotateX(-180deg);opacity:0}}
+.fbc.sel .fbf{opacity:0}
+.fbc:not(.sel).dim{filter:brightness(.5)}
 </style>
 </head>
 <body>
@@ -206,6 +235,28 @@ body{padding-bottom:140px}
 <div class="irc" data-g="ir"><img class="irf" src="select03.webp"><img class="irb" src="ans03.webp"></div>
 </div><button class="rst" onclick="resetG('ir','irc')">リセット</button></div>
 
+
+<!-- ⑬ 水滴リップル -->
+<div class="sec"><span class="tag">⑬ 水滴リップル型</span><p class="desc">タップ点から波紋が広がって画像が切り替わる</p><div class="row">
+<div class="rpc" data-g="rp"><img class="rpf" src="select01.webp"><img class="rpb" src="ans01.webp"></div>
+<div class="rpc" data-g="rp"><img class="rpf" src="select02.webp"><img class="rpb" src="ans02.webp"></div>
+<div class="rpc" data-g="rp"><img class="rpf" src="select03.webp"><img class="rpb" src="ans03.webp"></div>
+</div><button class="rst" onclick="resetG('rp','rpc')">リセット</button></div>
+
+<!-- ⑭ ホログラム -->
+<div class="sec"><span class="tag">⑭ ホログラム型</span><p class="desc">虹色の光沢がきらめいて画像が溶け込む</p><div class="row">
+<div class="hoc" data-g="ho"><img class="hof" src="select01.webp"><img class="hob" src="ans01.webp"></div>
+<div class="hoc" data-g="ho"><img class="hof" src="select02.webp"><img class="hob" src="ans02.webp"></div>
+<div class="hoc" data-g="ho"><img class="hof" src="select03.webp"><img class="hob" src="ans03.webp"></div>
+</div><button class="rst" onclick="resetG('ho','hoc')">リセット</button></div>
+
+<!-- ⑮ フリップブック -->
+<div class="sec"><span class="tag">⑮ フリップブック型</span><p class="desc">パラパラ漫画のように高速でページをめくる</p><div class="row">
+<div class="fbc" data-g="fb"><img class="fbf" src="select01.webp"><img class="fbb" src="ans01.webp"></div>
+<div class="fbc" data-g="fb"><img class="fbf" src="select02.webp"><img class="fbb" src="ans02.webp"></div>
+<div class="fbc" data-g="fb"><img class="fbf" src="select03.webp"><img class="fbb" src="ans03.webp"></div>
+</div><button class="rst" onclick="resetG('fb','fbc')">リセット</button></div>
+
 <script>
 /* Generic handler */
 function handle(sel,animCls){
@@ -246,6 +297,41 @@ document.querySelectorAll('.dc').forEach(function(c){c.addEventListener('click',
   g.forEach(function(x){x.classList.remove('sel','fall')});
   c.classList.add('sel');g.forEach(function(x){if(x!==c)x.classList.add('fall')});
 })});
+
+
+/* ⑬ Ripple */
+document.querySelectorAll('.rpc').forEach(function(c){
+  c.addEventListener('click',function(e){
+    var g=document.querySelectorAll('.rpc[data-g="rp"]');
+    var rect=c.getBoundingClientRect();
+    var t=e.touches?e.touches[0]:e;
+    var rx=((t.clientX-rect.left)/rect.width*100).toFixed(1)+'%';
+    var ry=((t.clientY-rect.top)/rect.height*100).toFixed(1)+'%';
+    g.forEach(function(x){x.classList.remove('sel','dim');x.style.removeProperty('--rx');x.style.removeProperty('--ry')});
+    c.style.setProperty('--rx',rx);
+    c.style.setProperty('--ry',ry);
+    c.classList.add('sel');
+    g.forEach(function(x){if(x!==c)x.classList.add('dim')});
+  });
+});
+
+/* ⑭ Hologram */
+handle('.hoc',null);
+
+/* ⑮ Flipbook */
+document.querySelectorAll('.fbc').forEach(function(c){
+  c.addEventListener('click',function(){
+    var g=document.querySelectorAll('.fbc[data-g="fb"]');
+    if(c.classList.contains('sel')||c.classList.contains('flip'))return;
+    g.forEach(function(x){x.classList.remove('sel','flip','dim')});
+    c.classList.add('flip');
+    c.addEventListener('animationend',function(){
+      c.classList.remove('flip');
+      c.classList.add('sel');
+      g.forEach(function(x){if(x!==c)x.classList.add('dim')});
+    },{once:true});
+  });
+});
 
 /* Reset */
 function resetG(g,cls){document.querySelectorAll('[data-g="'+g+'"]').forEach(function(c){c.className=cls;c.setAttribute('data-g',g)})}
