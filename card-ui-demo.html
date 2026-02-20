@@ -119,11 +119,21 @@ h1{text-align:center;font-size:18px;color:var(--pink);margin-bottom:8px}
 .irc.sel .irf{clip-path:circle(0% at 50% 50%)}
 .irc:not(.sel) .irf{clip-path:circle(75% at 50% 50%)}
 .irc:not(.sel).dim{filter:brightness(.5)}
+.intro{background:#fff5f8;border:1.5px solid var(--pink);border-radius:16px;padding:16px;margin-bottom:24px;font-size:12px;line-height:1.8;color:#555;text-align:center}
+.vote-btn{display:block;width:100%;margin-top:12px;padding:10px;font-size:13px;font-family:inherit;background:var(--pink);color:#fff;border:none;border-radius:20px;cursor:pointer;opacity:.35;transition:opacity .2s,transform .2s}
+.vote-btn.voted{opacity:1;transform:scale(1.03)}
+#vote-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;box-shadow:0 -4px 20px rgba(0,0,0,.12);padding:12px 20px 28px;z-index:100;text-align:center}
+#vl{font-size:11px;color:#999;margin-bottom:4px}
+#vn{font-size:14px;font-weight:700;color:var(--pink);margin-bottom:10px;min-height:20px}
+#vs{width:100%;padding:12px;font-size:14px;font-family:inherit;background:var(--green);color:#fff;border:none;border-radius:20px;cursor:pointer;opacity:.4;transition:opacity .2s}
+#vs.active{opacity:1}
+body{padding-bottom:140px}
 </style>
 </head>
 <body>
 <h1>カード選択UI デモ12種</h1>
 <p class="sub">タップして体感してください</p>
+<div class="intro">新たなステップアンケート動線を構築する上で、UIのアンケートを取らせてください。<br>どの押しボタンが最も良いと思いますか？<br>全てチェックした後、ページ下部から回答お願いします！</div>
 
 <!-- ① スクラッチオフ -->
 <div class="sec">
@@ -285,6 +295,42 @@ document.querySelectorAll('.dc').forEach(function(c){c.addEventListener('click',
 
 /* Reset */
 function resetG(g,cls){document.querySelectorAll('[data-g="'+g+'"]').forEach(function(c){c.className=cls;c.setAttribute('data-g',g)})}
+
+/* ===== 投票機能 ===== */
+var GAS_URL='https://script.google.com/macros/s/AKfycbxTnSnseI5Yh5QKch1NzYyuZxMER3OKMS7xlSDvZP_Ll-1j5G7CyCwlABaqPnJlzqgg/exec';
+var selectedUI=null;
+document.querySelectorAll('.sec').forEach(function(sec){
+  var tag=sec.querySelector('.tag');
+  if(!tag)return;
+  var name=tag.textContent.trim();
+  var btn=document.createElement('button');
+  btn.className='vote-btn';
+  btn.textContent='⭐ これを選ぶ';
+  btn.dataset.ui=name;
+  btn.addEventListener('click',function(){
+    document.querySelectorAll('.vote-btn').forEach(function(b){b.classList.remove('voted');b.textContent='⭐ これを選ぶ'});
+    btn.classList.add('voted');
+    btn.textContent='✅ 選択中！';
+    selectedUI=name;
+    document.getElementById('vn').textContent=name;
+    document.getElementById('vs').classList.add('active');
+  });
+  sec.appendChild(btn);
+});
+function submitVote(){
+  if(!selectedUI)return;
+  var vs=document.getElementById('vs');
+  vs.textContent='送信中...';
+  vs.disabled=true;
+  fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({ui:selectedUI})})
+    .then(function(){vs.textContent='✅ 回答しました！ありがとうございます';vs.style.background='#aaa'})
+    .catch(function(){vs.textContent='送信に失敗しました。再度お試しください';vs.disabled=false;vs.classList.add('active')});
+}
 </script>
+<div id="vote-bar">
+<div id="vl">あなたのお気に入りUI</div>
+<div id="vn">（まだ選択されていません）</div>
+<button id="vs" onclick="submitVote()">この選択で回答する</button>
+</div>
 </body>
 </html>
