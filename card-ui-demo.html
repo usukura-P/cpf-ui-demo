@@ -70,15 +70,6 @@ h1{text-align:center;font-size:18px;color:var(--pink);margin-bottom:8px}
 .shc:not(.sel) .shf{clip-path:inset(0 0 0 0)}
 .shc:not(.sel).dim{filter:brightness(.5)}
 
-/* ⑧ Glitch */
-.gc{flex:1;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:var(--r);overflow:hidden;position:relative}
-.gc img{border-radius:0;width:100%;display:block}
-.gc .gf{position:relative;z-index:1;transition:opacity .1s}.gc .gb{position:absolute;top:0;left:0;width:100%;z-index:0}
-.gc.sel .gf{opacity:0;z-index:0}.gc.sel .gb{z-index:1}
-.gc:not(.sel).dim{filter:brightness(.5)}
-.gc.glitch{animation:glitchShake .4s steps(4)}
-@keyframes glitchShake{0%{transform:translate(0)}20%{transform:translate(-5px,3px)}40%{transform:translate(4px,-4px)}60%{transform:translate(-3px,5px)}80%{transform:translate(5px,-2px)}100%{transform:translate(0)}}
-
 /* ⑨ Dissolve (pixel dissolve) */
 .dsc{flex:1;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:var(--r);overflow:hidden;position:relative}
 .dsc img{border-radius:0;width:100%;display:block}
@@ -200,12 +191,6 @@ body{padding-bottom:140px}
 <div class="shc" data-g="sh"><img class="shf" src="select03.webp"><img class="shb" src="ans03.webp"></div>
 </div><button class="rst" onclick="resetG('sh','shc')">リセット</button></div>
 
-<!-- ⑧ グリッチ -->
-<div class="sec"><span class="tag">⑧ グリッチ型</span><p class="desc">バグったようにガタガタ震えて画像チェンジ</p><div class="row">
-<div class="gc" data-g="gl"><img class="gf" src="select01.webp"><img class="gb" src="ans01.webp"></div>
-<div class="gc" data-g="gl"><img class="gf" src="select02.webp"><img class="gb" src="ans02.webp"></div>
-<div class="gc" data-g="gl"><img class="gf" src="select03.webp"><img class="gb" src="ans03.webp"></div>
-</div><button class="rst" onclick="resetG('gl','gc')">リセット</button></div>
 
 <!-- ⑨ ディゾルブ -->
 <div class="sec"><span class="tag">⑨ ディゾルブ型</span><p class="desc">表面がぼかしながら溶けて消え、裏面が浮かび上がる</p><div class="row">
@@ -275,7 +260,6 @@ function handle(sel,animCls){
 /* ⑤ Envelope */ handle('.ec',null);
 /* ⑥ Slot */ handle('.slc','spin');
 /* ⑦ Shutter */ handle('.shc',null);
-/* ⑧ Glitch */ handle('.gc','glitch');
 /* ⑨ Dissolve */ handle('.dsc',null);
 /* ⑩ Swing Door */ handle('.swc',null);
 /* ⑪ Accordion */ handle('.acc',null);
