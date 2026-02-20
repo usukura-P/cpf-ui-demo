@@ -207,6 +207,19 @@ body{padding-bottom:140px}
 </div><button class="rst" onclick="resetG('ir','irc')">リセット</button></div>
 
 <script>
+/* Generic handler */
+function handle(sel,animCls){
+  document.querySelectorAll(sel).forEach(function(c){
+    c.addEventListener('click',function(){
+      var g=document.querySelectorAll(sel+'[data-g="'+c.dataset.g+'"]');
+      g.forEach(function(x){x.classList.remove('sel','dim','fall');if(animCls)x.classList.remove(animCls);x.querySelectorAll('.ptc').forEach(function(p){p.remove()})});
+      c.classList.add('sel');
+      if(animCls){c.classList.add(animCls);c.addEventListener('animationend',function(){c.classList.remove(animCls)},{once:true})}
+      g.forEach(function(x){if(x!==c)x.classList.add('dim')});
+    });
+  });
+}
+
 /* ② Jelly */ handle('.jc','jig');
 /* ⑤ Envelope */ handle('.ec',null);
 /* ⑥ Slot */ handle('.slc','spin');
