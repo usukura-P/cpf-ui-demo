@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ステップインジケーター デモ12種</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--pink:#FB4E93;--pink-light:#ffe0ee;--gold:#FFD700;--green:#06c755;--dark:#1a1a2e;--r:12px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Zen Maru Gothic',sans-serif;background:#f8f5f0;color:#333;padding:20px 20px 160px;max-width:480px;margin:0 auto}
+h1{text-align:center;font-size:18px;color:var(--pink);margin-bottom:8px}
+.sub{text-align:center;font-size:11px;color:#999;margin-bottom:24px}
+.intro{background:#fff5f8;border:1.5px solid var(--pink);border-radius:16px;padding:16px;margin-bottom:24px;font-size:12px;line-height:1.8;color:#555;text-align:center}
+.sec{margin-bottom:32px;background:#fff;border-radius:16px;padding:20px 16px;box-shadow:0 4px 20px rgba(0,0,0,.06)}
+.tag{display:block;text-align:center;font-size:10px;color:#fff;background:var(--pink);border-radius:20px;padding:2px 12px;width:fit-content;margin:0 auto 8px}
+.name{text-align:center;font-size:14px;font-weight:700;margin-bottom:4px}
+.desc{text-align:center;font-size:11px;color:#888;margin-bottom:16px;line-height:1.5}
+.demo-area{min-height:80px;display:flex;align-items:center;justify-content:center;padding:16px 8px;background:#fafafa;border-radius:12px;margin-bottom:12px}
+.controls{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.controls button{padding:6px 14px;font-size:11px;border:1px solid #ddd;background:#fff;border-radius:20px;cursor:pointer;font-family:inherit;transition:all .2s}
+.controls button.active{background:var(--pink);color:#fff;border-color:var(--pink)}
+.controls button:hover{border-color:var(--pink)}
+
+/* プレゼントアイコン（SVG placeholder 60x60） */
+.gift-icon{width:40px;height:40px;flex-shrink:0}
+
+/* 投票バー */
+.vote-btn{display:block;width:100%;margin-top:12px;padding:10px;font-size:13px;font-family:inherit;background:var(--pink);color:#fff;border:none;border-radius:20px;cursor:pointer;opacity:.85;transition:opacity .2s,transform .2s}
+.vote-btn.voted{opacity:1;transform:scale(1.03);box-shadow:0 4px 12px rgba(251,78,147,.4)}
+#vote-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;box-shadow:0 -4px 20px rgba(0,0,0,.12);padding:12px 20px 28px;z-index:100;text-align:center}
+#vl{font-size:11px;color:#999;margin-bottom:4px}
+#vn{font-size:14px;font-weight:700;color:var(--pink);margin-bottom:10px;min-height:20px}
+#vs{width:100%;padding:12px;font-size:14px;font-family:inherit;background:var(--green);color:#fff;border:none;border-radius:20px;cursor:pointer;opacity:.4;transition:opacity .2s}
+#vs.active{opacity:1}
+
+/* ============================================
+   ① プログレスバー＋プレゼント
+   ============================================ */
+.si1{width:100%;display:flex;align-items:center;gap:8px}
+.si1-bar{flex:1;height:12px;background:#eee;border-radius:6px;overflow:hidden;position:relative}
+.si1-fill{height:100%;background:linear-gradient(90deg,var(--pink),#ff8ec6);border-radius:6px;transition:width .6s cubic-bezier(.4,0,.2,1);width:0}
+.si1-bar::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);animation:shimmer1 2s infinite;background-size:200% 100%}
+@keyframes shimmer1{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.si1 .gift-icon{transition:transform .4s,filter .3s;filter:grayscale(1) opacity(.4)}
+.si1.step4 .gift-icon{filter:grayscale(0) opacity(1);transform:scale(1.3);animation:giftBounce .6s ease}
+@keyframes giftBounce{0%{transform:scale(1)}40%{transform:scale(1.5)}70%{transform:scale(1.1)}100%{transform:scale(1.3)}}
+
+/* ============================================
+   ② ドット連結型
+   ============================================ */
+.si2{display:flex;align-items:center;gap:0;width:100%;justify-content:center}
+.si2-dot{width:28px;height:28px;border-radius:50%;background:#e0e0e0;transition:all .4s;display:flex;align-items:center;justify-content:center;font-size:11px;color:#aaa;font-weight:700;position:relative;z-index:1}
+.si2-dot.done{background:var(--pink);color:#fff;animation:dotPop .4s ease}
+.si2-dot.current{background:#fff;border:3px solid var(--pink);color:var(--pink);animation:dotPulse 1.2s infinite}
+.si2-line{width:24px;height:3px;background:#e0e0e0;transition:background .4s}
+.si2-line.done{background:var(--pink)}
+@keyframes dotPop{0%{transform:scale(1)}50%{transform:scale(1.4)}100%{transform:scale(1)}}
+@keyframes dotPulse{0%,100%{box-shadow:0 0 0 0 rgba(251,78,147,.4)}50%{box-shadow:0 0 0 8px rgba(251,78,147,0)}}
+.si2 .gift-icon{transition:all .5s;filter:grayscale(1) opacity(.3);transform:scale(.8)}
+.si2.step4 .gift-icon{filter:none;transform:scale(1.2);animation:giftShake .5s ease}
+@keyframes giftShake{0%,100%{transform:rotate(0) scale(1.2)}25%{transform:rotate(-10deg) scale(1.2)}75%{transform:rotate(10deg) scale(1.2)}}
+
+/* ============================================
+   ③ 階段型
+   ============================================ */
+.si3{display:flex;align-items:flex-end;gap:4px;width:100%;justify-content:center;height:100px;padding:0 20px}
+.si3-step{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+.si3-block{width:100%;border-radius:6px 6px 0 0;background:#eee;transition:all .5s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden}
+.si3-block.done{background:linear-gradient(180deg,var(--pink),#e0357a)}
+.si3-block.done::after{content:'';position:absolute;top:0;left:0;right:0;height:40%;background:linear-gradient(180deg,rgba(255,255,255,.3),transparent)}
+.si3-block.current{background:linear-gradient(180deg,var(--pink),#e0357a);animation:stairPulse 1s infinite alternate}
+@keyframes stairPulse{0%{box-shadow:0 0 0 rgba(251,78,147,0)}100%{box-shadow:0 -4px 16px rgba(251,78,147,.5)}}
+.si3-label{font-size:9px;color:#bbb;transition:color .3s}
+.si3-label.done{color:var(--pink);font-weight:700}
+.si3 .si3-gift{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.si3 .gift-icon{transition:all .5s;filter:grayscale(1) opacity(.3)}
+.si3.step4 .gift-icon{filter:none;animation:giftFloat 1s ease infinite alternate}
+@keyframes giftFloat{0%{transform:translateY(0)}100%{transform:translateY(-6px)}}
+
+/* ============================================
+   ④ ロケット型
+   ============================================ */
+.si4{width:100%;position:relative;height:60px;display:flex;align-items:center}
+.si4-track{width:100%;height:4px;background:#eee;border-radius:2px;position:relative}
+.si4-fill{height:100%;background:linear-gradient(90deg,#ff8ec6,var(--pink));border-radius:2px;transition:width .6s ease;width:0}
+.si4-rocket{position:absolute;top:50%;transform:translate(-50%,-50%);font-size:24px;transition:left .6s cubic-bezier(.4,0,.2,1);left:0;z-index:2;filter:drop-shadow(0 2px 6px rgba(251,78,147,.4))}
+.si4-stars{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden}
+.si4-star{position:absolute;font-size:10px;opacity:0;animation:starTwinkle 1.5s ease infinite}
+@keyframes starTwinkle{0%,100%{opacity:0;transform:scale(.5)}50%{opacity:1;transform:scale(1)}}
+.si4 .gift-wrap{position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:1}
+.si4 .gift-icon{transition:all .5s;filter:grayscale(1) opacity(.3)}
+.si4.step4 .gift-icon{filter:none;animation:giftBounce .6s ease}
+.si4.step4 .si4-rocket{animation:rocketLand .6s ease}
+@keyframes rocketLand{0%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-80%) scale(1.3)}100%{transform:translate(-50%,-50%) scale(1)}}
+
+/* ============================================
+   ⑤ 液体充填型
+   ============================================ */
+.si5{display:flex;align-items:center;justify-content:center;gap:12px}
+.si5-bottle{width:50px;height:80px;border:3px solid #ddd;border-radius:0 0 12px 12px;position:relative;overflow:hidden;background:#f5f5f5;transition:border-color .4s}
+.si5-bottle::before{content:'';position:absolute;top:50%;left:-10%;width:120%;height:0%;background:linear-gradient(180deg,#ff8ec6,var(--pink));border-radius:50% 50% 0 0;transition:height .8s cubic-bezier(.4,0,.2,1),top .8s cubic-bezier(.4,0,.2,1);animation:wave 2s ease-in-out infinite}
+@keyframes wave{0%,100%{border-radius:45% 55% 0 0}50%{border-radius:55% 45% 0 0}}
+.si5-bottle.q1::before{height:25%;top:75%}
+.si5-bottle.q2::before{height:50%;top:50%}
+.si5-bottle.q3::before{height:75%;top:25%}
+.si5-bottle.q4::before{height:100%;top:0%}
+.si5-bottle.q4{border-color:var(--pink)}
+.si5-marks{display:flex;flex-direction:column;gap:2px;font-size:9px;color:#bbb;height:80px;justify-content:space-between;padding:4px 0}
+.si5 .gift-icon{transition:all .5s;filter:grayscale(1) opacity(.3)}
+.si5.step4 .gift-icon{filter:none;animation:giftBounce .6s ease}
+
+/* ============================================
+   ⑥ カウントダウンバッジ型（競合準拠）
+   ============================================ */
+.si6{text-align:center}
+.si6-badge{display:inline-block;padding:8px 24px;border-radius:30px;font-size:16px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--pink),#e0357a);box-shadow:0 4px 16px rgba(251,78,147,.3);transition:all .5s;position:relative;overflow:hidden}
+.si6-badge::after{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:linear-gradient(45deg,transparent,rgba(255,255,255,.2),transparent);animation:badgeShine 3s infinite}
+@keyframes badgeShine{0%{transform:translateX(-100%) rotate(45deg)}100%{transform:translateX(100%) rotate(45deg)}}
+.si6-badge.complete{background:linear-gradient(135deg,var(--gold),#ffaa00);animation:badgeComplete .6s ease}
+@keyframes badgeComplete{0%{transform:scale(1)}50%{transform:scale(1.2) rotate(5deg)}100%{transform:scale(1)}}
+.si6-sub{margin-top:8px;font-size:10px;color:#aaa}
+
+/* ============================================
+   ⑦ マップ（蛇行パス）型
+   ============================================ */
+.si7{width:100%;padding:0 8px}
+.si7-path{display:flex;flex-direction:column;gap:0;position:relative}
+.si7-row{display:flex;align-items:center;height:36px;position:relative}
+.si7-row:nth-child(odd){justify-content:flex-start}
+.si7-row:nth-child(even){justify-content:flex-end}
+.si7-node{width:28px;height:28px;border-radius:50%;background:#e0e0e0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#aaa;font-weight:700;position:relative;z-index:2;transition:all .4s}
+.si7-node.done{background:var(--pink);color:#fff}
+.si7-node.current{background:var(--pink);color:#fff;animation:dotPulse 1.2s infinite}
+.si7-connector{position:absolute;height:3px;background:#e0e0e0;transition:background .4s;z-index:1}
+.si7-connector.done{background:var(--pink)}
+.si7-row:nth-child(1) .si7-connector{left:28px;right:50%;top:50%;transform:translateY(-50%)}
+.si7-row:nth-child(2) .si7-connector{right:28px;left:50%;top:50%;transform:translateY(-50%)}
+.si7 .gift-wrap{display:flex;justify-content:center;margin-top:4px}
+.si7 .gift-icon{transition:all .5s;filter:grayscale(1) opacity(.3)}
+.si7.step4 .gift-icon{filter:none;animation:giftShake .5s ease}
+
+/* ============================================
+   ⑧ オーブ（発光球）型
+   ============================================ */
+.si8{display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
+.si8-orb{width:32px;height:32px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#f0f0f0,#ccc);transition:all .5s;position:relative}
+.si8-orb.done{background:radial-gradient(circle at 35% 35%,#ffb3d0,var(--pink));box-shadow:0 0 16px rgba(251,78,147,.5)}
+.si8-orb.current{background:radial-gradient(circle at 35% 35%,#ffb3d0,var(--pink));box-shadow:0 0 16px rgba(251,78,147,.5);animation:orbGlow 1.5s infinite alternate}
+@keyframes orbGlow{0%{box-shadow:0 0 8px rgba(251,78,147,.3)}100%{box-shadow:0 0 24px rgba(251,78,147,.8),0 0 48px rgba(251,78,147,.3)}}
+.si8-beam{width:20px;height:2px;background:#e0e0e0;transition:all .5s}
+.si8-beam.done{background:var(--pink);box-shadow:0 0 8px rgba(251,78,147,.3);height:3px}
+.si8 .gift-icon{transition:all .5s;filter:grayscale(1) opacity(.3)}
+.si8.step4 .gift-icon{filter:none;animation:giftBounce .6s ease}
+.si8.step4 .gift-icon{box-shadow:0 0 20px rgba(255,215,0,.6);border-radius:8px}
+
+/* ============================================
+   ⑨ リボン解き型
+   ============================================ */
+.si9{text-align:center;position:relative}
+.si9-gift-wrap{position:relative;display:inline-block}
+.si9-gift-wrap .gift-icon{width:64px;height:64px}
+.si9-ribbon-h{position:absolute;top:50%;left:0;width:100%;height:8px;background:linear-gradient(90deg,#ff6b8a,#ff3366);transform:translateY(-50%);transition:all .6s;border-radius:2px;z-index:2}
+.si9-ribbon-v{position:absolute;left:50%;top:0;width:8px;height:100%;background:linear-gradient(180deg,#ff6b8a,#ff3366);transform:translateX(-50%);transition:all .6s;border-radius:2px;z-index:2}
+.si9-bow{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:20px;z-index:3;transition:all .6s}
+.si9.step1 .si9-ribbon-h{opacity:.8}
+.si9.step2 .si9-ribbon-v{width:4px;opacity:.6}
+.si9.step3 .si9-ribbon-h{height:4px;opacity:.4}.si9.step3 .si9-ribbon-v{opacity:.3}
+.si9.step4 .si9-ribbon-h,.si9.step4 .si9-ribbon-v{opacity:0;transform:scale(0)}
+.si9.step4 .si9-bow{opacity:0;transform:translateX(-50%) scale(0)}
+.si9.step4 .gift-icon{animation:giftReveal .8s ease}
+@keyframes giftReveal{0%{transform:scale(1)}40%{transform:scale(1.3) rotate(-5deg)}70%{transform:scale(1.1) rotate(3deg)}100%{transform:scale(1.2)}}
+.si9-label{margin-top:8px;font-size:11px;color:#aaa;transition:all .3s}
+.si9.step4 .si9-label{color:var(--pink);font-weight:700}
+
+/* ============================================
+   ⑩ サークルゲージ型
+   ============================================ */
+.si10{display:flex;align-items:center;justify-content:center;gap:16px}
+.si10-gauge{position:relative;width:72px;height:72px}
+.si10-gauge svg{transform:rotate(-90deg)}
+.si10-gauge circle{fill:none;stroke-width:6}
+.si10-gauge .bg{stroke:#eee}
+.si10-gauge .fg{stroke:var(--pink);stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1)}
+.si10-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:14px;font-weight:700;color:var(--pink)}
+.si10 .gift-icon{transition:all .5s;filter:grayscale(1) opacity(.3)}
+.si10.step4 .gift-icon{filter:none;animation:giftBounce .6s ease}
+
+/* ============================================
+   ⑪ 花びら開花型
+   ============================================ */
+.si11{display:flex;align-items:center;justify-content:center;position:relative;width:100%;height:100px}
+.si11-flower{position:relative;width:80px;height:80px}
+.si11-petal{position:absolute;width:20px;height:20px;border-radius:50% 50% 50% 0;transition:all .6s cubic-bezier(.4,0,.2,1);opacity:0;transform:scale(0) rotate(0deg)}
+.si11-petal.bloom{opacity:1;transform:scale(1) rotate(var(--rot))}
+.si11-petal:nth-child(1){background:#ffb3d0;top:0;left:50%;margin-left:-10px;transform-origin:bottom center;--rot:-15deg}
+.si11-petal:nth-child(2){background:#ff8ec6;top:20%;right:0;transform-origin:left center;--rot:75deg}
+.si11-petal:nth-child(3){background:#ff6baf;bottom:10%;right:10%;transform-origin:top left;--rot:150deg}
+.si11-petal:nth-child(4){background:#fb4e93;bottom:0;left:50%;margin-left:-10px;transform-origin:top center;--rot:220deg}
+.si11-core{position:absolute;top:50%;left:50%;width:24px;height:24px;border-radius:50%;background:#eee;transform:translate(-50%,-50%);transition:all .5s;z-index:2;display:flex;align-items:center;justify-content:center}
+.si11-core.full{background:var(--gold)}
+.si11 .gift-icon{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;width:28px;height:28px;transition:all .5s;filter:grayscale(1) opacity(.3)}
+.si11.step4 .gift-icon{filter:none;animation:giftBounce .6s ease}
+.si11-status{position:absolute;bottom:0;left:50%;transform:translateX(-50%);font-size:10px;color:#aaa;white-space:nowrap}
+
+/* ============================================
+   ⑫ パーティクルトレイル型
+   ============================================ */
+.si12{width:100%;height:60px;position:relative;display:flex;align-items:center}
+.si12-track{width:100%;height:6px;background:#eee;border-radius:3px;position:relative;overflow:visible}
+.si12-fill{height:100%;background:linear-gradient(90deg,#ffb3d0,var(--pink));border-radius:3px;transition:width .6s ease;width:0;position:relative}
+.si12-fill::after{content:'';position:absolute;right:-4px;top:50%;transform:translateY(-50%);width:12px;height:12px;border-radius:50%;background:var(--pink);box-shadow:0 0 12px rgba(251,78,147,.6);transition:all .3s}
+.si12-particles{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+.si12-p{position:absolute;width:4px;height:4px;border-radius:50%;opacity:0}
+.si12 .gift-wrap{position:absolute;right:0;top:50%;transform:translateY(-50%);z-index:2}
+.si12 .gift-icon{transition:all .5s;filter:grayscale(1) opacity(.3)}
+.si12.step4 .gift-icon{filter:none;animation:giftBounce .6s ease}
+</style>
+</head>
+<body>
+
+<h1>ステップインジケーター デモ12種</h1>
+<p class="sub">ボタンで進捗をシミュレーションしてください</p>
+<div class="intro">
+LPのフリップアンケートに使うステップインジケーターのカタログです。<br>
+1→2→3→4と進むにつれ、ゴール（プレゼント）に近づいていく感覚を表現しています。<br>
+「⭐ これを選ぶ」で投票してください！
+</div>
+
+<!-- SVG gift icon (placeholder) -->
+<svg style="display:none">
+  <symbol id="gift-svg" viewBox="0 0 64 64">
+    <rect x="8" y="28" width="48" height="28" rx="4" fill="#FB4E93"/>
+    <rect x="8" y="28" width="48" height="28" rx="4" fill="url(#giftGrad)" opacity=".3"/>
+    <rect x="4" y="24" width="56" height="12" rx="4" fill="#ff6baf"/>
+    <rect x="28" y="24" width="8" height="32" fill="#FFD700"/>
+    <rect x="4" y="28" width="56" height="4" fill="#FFD700" opacity=".0"/>
+    <path d="M32 24c0 0-8-14-16-10s4 10 16 10" fill="#FFD700" opacity=".9"/>
+    <path d="M32 24c0 0 8-14 16-10s-4 10-16 10" fill="#ffaa00" opacity=".9"/>
+    <rect x="4" y="24" width="56" height="4" fill="rgba(255,255,255,.15)"/>
+    <defs><linearGradient id="giftGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="transparent"/></linearGradient></defs>
+  </symbol>
+</svg>
+
+<!-- ① プログレスバー＋プレゼント -->
+<div class="sec" data-id="1">
+<span class="tag">①</span>
+<div class="name">プログレスバー型</div>
+<p class="desc">バーが伸びてプレゼントに到達する王道スタイル</p>
+<div class="demo-area">
+  <div class="si1" data-step="0">
+    <div class="si1-bar"><div class="si1-fill"></div></div>
+    <svg class="gift-icon"><use href="#gift-svg"/></svg>
+  </div>
+</div>
+<div class="controls">
+  <button onclick="setStep(this,0)">リセット</button>
+  <button onclick="setStep(this,1)">Q1</button>
+  <button onclick="setStep(this,2)">Q2</button>
+  <button onclick="setStep(this,3)">Q3</button>
+  <button onclick="setStep(this,4)">Q4</button>
+</div>
+</div>
+
+<!-- ② ドット連結型 -->
+<div class="sec" data-id="2">
+<span class="tag">②</span>
+<div class="name">ドット連結型</div>
+<p class="desc">ドットが次々と色づき、プレゼントへ繋がっていく</p>
+<div class="demo-area">
+  <div class="si2" data-step="0">
+    <div class="si2-dot" data-n="1">1</div>
+    <div class="si2-line" data-n="1"></div>
+    <div class="si2-dot" data-n="2">2</div>
+    <div class="si2-line" data-n="2"></div>
+    <div class="si2-dot" data-n="3">3</div>
+    <div class="si2-line" data-n="3"></div>
+    <div class="si2-dot" data-n="4">4</div>
+    <div class="si2-line" data-n="4"></div>
+    <svg class="gift-icon"><use href="#gift-svg"/></svg>
+  </div>
+</div>
+<div class="controls">
+  <button onclick="setStep(this,0)">リセット</button>
+  <button onclick="setStep(this,1)">Q1</button>
+  <button onclick="setStep(this,2)">Q2</button>
+  <button onclick="setStep(this,3)">Q3</button>
+  <button onclick="setStep(this,4)">Q4</button>
+</div>
+</div>
+
+<!-- ③ 階段型 -->
+<div class="sec" data-id="3">
+<span class="tag">③</span>
+<div class="name">階段型</div>
+<p class="desc">一段ずつ登ってプレゼントへたどり着く</p>
+<div class="demo-area">
+  <div class="si3" data-step="0">
+    <div class="si3-step"><div class="si3-label" data-n="1">Q1</div><div class="si3-block" data-n="1" style="height:25px"></div></div>
+    <div class="si3-step"><div class="si3-label" data-n="2">Q2</div><div class="si3-block" data-n="2" style="height:40px"></div></div>
+    <div class="si3-step"><div class="si3-label" data-n="3">Q3</div><div class="si3-block" data-n="3" style="height:55px"></div></div>
+    <div class="si3-step"><div class="si3-label" data-n="4">Q4</div><div class="si3-block" data-n="4" style="height:70px"></div></div>
+    <div class="si3-gift"><svg class="gift-icon"><use href="#gift-svg"/></svg></div>
+  </div>
+</div>
+<div class="controls">
+  <button onclick="setStep(this,0)">リセット</button>
+  <button onclick="setStep(this,1)">Q1</button>
+  <button onclick="setStep(this,2)">Q2</button>
+  <button onclick="setStep(this,3)">Q3</button>
+  <button onclick="setStep(this,4)">Q4</button>
+</div>
+</div>
+
+<!-- ④ ロケット型 -->
+<div class="sec" data-id="4">
+<span class="tag">④</span>
+<div class="name">ロケット型</div>
+<p class="desc">ロケットがプレゼントに向かって飛んでいく</p>
+<div class="demo-area">
+  <div class="si4" data-step="0">
+    <div class="si4-track"><div class="si4-fill"></div></div>
+    <div class="si4-rocket">🚀</div>
+    <div class="si4-stars"></div>
+    <div class="gift-wrap"><svg class="gift-icon"><use href="#gift-svg"/></svg></div>
+  </div>
+</div>
+<div class="controls">
+  <button onclick="setStep(this,0)">リセット</button>
+  <button onclick="setStep(this,1)">Q1</button>
+  <button onclick="setStep(this,2)">Q2</button>
+  <button onclick="setStep(this,3)">Q3</button>
+  <button onclick="setStep(this,4)">Q4</button>
+</div>
+</div>
+
+<!-- ⑤ 液体充填型 -->
+<div class="sec" data-id="5">
+<span class="tag">⑤</span>
+<div class="name">液体充填型</div>
+<p class="desc">ボトルに液体が溜まっていき、満タンでプレゼント獲得</p>
+<div class="demo-area">
+  <div class="si5" data-step="0">
+    <div class="si5-bottle"></div>
+    <div class="si5-marks"><span>4/4</span><span>3/4</span><span>2/4</span><span>1/4</span></div>
+    <svg class="gift-icon"><use href="#gift-svg"/></svg>
+  </div>
+</div>
+<div class="controls">
+  <button onclick="setStep(this,0)">リセット</button>
+  <button onclick="setStep(this,1)">Q1</button>
+  <button onclick="setStep(this,2)">Q2</button>
+  <button onclick="setStep(this,3)">Q3</button>
+  <button onclick="setStep(this,4)">Q4</button>
+</div>
+</div>
+
+<!-- ⑥ カウントダウンバッジ型 -->
+<div class="sec" data-id="6">
+<span class="tag">⑥</span>
+<div class="name">カウントダウンバッジ型</div>
+<p class="desc">「あとN問」のバッジが減っていき完了で変化（競合準拠）</p>
+<div class="demo-area">
+  <div class="si6" data-step="0">
+    <div class="si6-badge">あと4問</div>
+    <div class="si6-sub">すべて答えるとプレゼントがもらえます</div>
+  </div>
+</div>
+<div class="controls">
+  <button onclick="setStep(this,0)">リセット</button>
+  <button onclick="setStep(this,1)">Q1</button>
+  <button onclick="setStep(this,2)">Q2</button>
+  <button onclick="setStep(this,3)">Q3</button>
+  <button onclick="setStep(this,4)">Q4</button>
+</div>
+</div>
+
+<!-- ⑦ マップ（蛇行パス）型 -->
+<div class="sec" data-id="7">
+<span class="tag">⑦</span>
+<div class="name">マップ型</div>
+<p class="desc">蛇行する道を進んでゴールのプレゼントへ</p>
+<div class="demo-area">
+  <div class="si7" data-step="0">
+    <div class="si7-path">
+      <div class="si7-row"><div class="si7-node" data-n="1">①</div><div class="si7-connector" data-n="1"></div></div>
+      <div class="si7-row"><div class="si7-connector" data-n="2"></div><div class="si7-node" data-n="2">②</div></div>
+      <div class="si7-row"><div class="si7-node" data-n="3">③</div><div class="si7-connector" data-n="3"></div></div>
+      <div class="si7-row"><div class="si7-connector" data-n="4"></div><div class="si7-node" data-n="4">④</div></div>
+    </div>
+    <div class="gift-wrap" style="text-align:center;margin-top:8px"><svg class="gift-icon"><use href="#gift-svg"/></svg></div>
+  </div>
+</div>
+<div class="controls">
+  <button onclick="setStep(this,0)">リセット</button>
+  <button onclick="setStep(this,1)">Q1</button>
+  <button onclick="setStep(this,2)">Q2</button>
+  <button onclick="setStep(this,3)">Q3</button>
+  <button onclick="setStep(this,4)">Q4</button>
+</div>
+</div>
+
+<!-- ⑧ オーブ（発光球）型 -->
+<div class="sec" data-id="8">
+<span class="tag">⑧</span>
+<div class="name">オーブ型</div>
+<p class="desc">エネルギー球が次々と灯り、光のビームでプレゼントへ</p>
+<div class="demo-area">
+  <div class="si8" data-step="0">
+    <div class="si8-orb" data-n="1"></div>
+    <div class="si8-beam" data-n="1"></div>
+    <div class="si8-orb" data-n="2"></div>
+    <div class="si8-beam" data-n="2"></div>
+    <div class="si8-orb" data-n="3"></div>
+    <div class="si8-beam" data-n="3"></div>
+    <div class="si8-orb" data-n="4"></div>
+    <div class="si8-beam" data-n="4"></div>
+    <svg class="gift-icon"><use href="#gift-svg"/></svg>
+  </div>
+</div>
+<div class="controls">
+  <button onclick="setStep(this,0)">リセット</button>
+  <button onclick="setStep(this,1)">Q1</button>
+  <button onclick="setStep(this,2)">Q2</button>
+  <button onclick="setStep(this,3)">Q3</button>
+  <button onclick="setStep(this,4)">Q4</button>
+</div>
+</div>
+
+<!-- ⑨ リボン解き型 -->
+<div class="sec" data-id="9">
+<span class="tag">⑨</span>
+<div class="name">リボン解き型</div>
+<p class="desc">ステップごとにリボンがほどけてプレゼントが現れる</p>
+<div class="demo-area">
+  <div class="si9" data-step="0">
+    <div class="si9-gift-wrap">
+      <svg class="gift-icon"><use href="#gift-svg"/></svg>
+      <div class="si9-ribbon-h"></div>
+      <div class="si9-ribbon-v"></div>
+      <div class="si9-bow">🎀</div>
+    </div>
+    <div class="si9-label">リボンをほどこう…</div>
+  </div>
+</div>
+<div class="controls">
+  <button onclick="setStep(this,0)">リセット</button>
+  <button onclick="setStep(this,1)">Q1</button>
+  <button onclick="setStep(this,2)">Q2</button>
+  <button onclick="setStep(this,3)">Q3</button>
+  <button onclick="setStep(this,4)">Q4</button>
+</div>
+</div>
+
+<!-- ⑩ サークルゲージ型 -->
+<div class="sec" data-id="10">
+<span class="tag">⑩</span>
+<div class="name">サークルゲージ型</div>
+<p class="desc">円形ゲージが徐々に満ちていく</p>
+<div class="demo-area">
+  <div class="si10" data-step="0">
+    <div class="si10-gauge">
+      <svg width="72" height="72" viewBox="0 0 72 72">
+        <circle class="bg" cx="36" cy="36" r="30"/>
+        <circle class="fg" cx="36" cy="36" r="30" stroke-dasharray="188.5" stroke-dashoffset="188.5"/>
+      </svg>
+      <div class="si10-center">0%</div>
+    </div>
+    <svg class="gift-icon"><use href="#gift-svg"/></svg>
+  </div>
+</div>
+<div class="controls">
+  <button onclick="setStep(this,0)">リセット</button>
+  <button onclick="setStep(this,1)">Q1</button>
+  <button onclick="setStep(this,2)">Q2</button>
+  <button onclick="setStep(this,3)">Q3</button>
+  <button onclick="setStep(this,4)">Q4</button>
+</div>
+</div>
+
+<!-- ⑪ 花びら開花型 -->
+<div class="sec" data-id="11">
+<span class="tag">⑪</span>
+<div class="name">花びら開花型</div>
+<p class="desc">回答ごとに花びらが開き、満開でプレゼントが現れる</p>
+<div class="demo-area">
+  <div class="si11" data-step="0">
+    <div class="si11-flower">
+      <div class="si11-petal" data-n="1"></div>
+      <div class="si11-petal" data-n="2"></div>
+      <div class="si11-petal" data-n="3"></div>
+      <div class="si11-petal" data-n="4"></div>
+      <div class="si11-core"></div>
+      <svg class="gift-icon"><use href="#gift-svg"/></svg>
+    </div>
+    <div class="si11-status">0/4</div>
+  </div>
+</div>
+<div class="controls">
+  <button onclick="setStep(this,0)">リセット</button>
+  <button onclick="setStep(this,1)">Q1</button>
+  <button onclick="setStep(this,2)">Q2</button>
+  <button onclick="setStep(this,3)">Q3</button>
+  <button onclick="setStep(this,4)">Q4</button>
+</div>
+</div>
+
+<!-- ⑫ パーティクルトレイル型 -->
+<div class="sec" data-id="12">
+<span class="tag">⑫</span>
+<div class="name">パーティクルトレイル型</div>
+<p class="desc">キラキラと光の軌跡を残しながらプレゼントへ進む</p>
+<div class="demo-area">
+  <div class="si12" data-step="0">
+    <div class="si12-track">
+      <div class="si12-fill"></div>
+      <div class="si12-particles"></div>
+    </div>
+    <div class="gift-wrap"><svg class="gift-icon"><use href="#gift-svg"/></svg></div>
+  </div>
+</div>
+<div class="controls">
+  <button onclick="setStep(this,0)">リセット</button>
+  <button onclick="setStep(this,1)">Q1</button>
+  <button onclick="setStep(this,2)">Q2</button>
+  <button onclick="setStep(this,3)">Q3</button>
+  <button onclick="setStep(this,4)">Q4</button>
+</div>
+</div>
+
+<script>
+/* ===== ステップ更新ロジック ===== */
+function setStep(btn, step) {
+  var sec = btn.closest('.sec');
+  var id = sec.dataset.id;
+  var wrap = sec.querySelector('[data-step]');
+  wrap.dataset.step = step;
+
+  // ボタンのアクティブ状態
+  sec.querySelectorAll('.controls button').forEach(function(b,i){ b.classList.toggle('active', i === step) });
+
+  // 各タイプの更新
+  switch(id) {
+    case '1': updateSI1(wrap, step); break;
+    case '2': updateSI2(wrap, step); break;
+    case '3': updateSI3(wrap, step); break;
+    case '4': updateSI4(wrap, step); break;
+    case '5': updateSI5(wrap, step); break;
+    case '6': updateSI6(wrap, step); break;
+    case '7': updateSI7(wrap, step); break;
+    case '8': updateSI8(wrap, step); break;
+    case '9': updateSI9(wrap, step); break;
+    case '10': updateSI10(wrap, step); break;
+    case '11': updateSI11(wrap, step); break;
+    case '12': updateSI12(wrap, step); break;
+  }
+
+  // step4 class toggle for gift animation
+  wrap.classList.toggle('step4', step === 4);
+}
+
+/* ① プログレスバー */
+function updateSI1(el, step) {
+  el.querySelector('.si1-fill').style.width = (step * 25) + '%';
+}
+
+/* ② ドット連結 */
+function updateSI2(el, step) {
+  el.querySelectorAll('.si2-dot').forEach(function(d) {
+    var n = parseInt(d.dataset.n);
+    d.classList.remove('done','current');
+    if (n < step) d.classList.add('done');
+    else if (n === step) d.classList.add('current');
+  });
+  el.querySelectorAll('.si2-line').forEach(function(l) {
+    l.classList.toggle('done', parseInt(l.dataset.n) < step);
+  });
+  // last line before gift
+  var lastLine = el.querySelectorAll('.si2-line');
+  if (lastLine[3]) lastLine[3].classList.toggle('done', step >= 4);
+}
+
+/* ③ 階段 */
+function updateSI3(el, step) {
+  el.querySelectorAll('.si3-block').forEach(function(b) {
+    var n = parseInt(b.dataset.n);
+    b.classList.remove('done','current');
+    if (n < step) b.classList.add('done');
+    else if (n === step) b.classList.add('current');
+  });
+  el.querySelectorAll('.si3-label').forEach(function(l) {
+    l.classList.toggle('done', parseInt(l.dataset.n) <= step);
+  });
+}
+
+/* ④ ロケット */
+function updateSI4(el, step) {
+  var pct = step * 22;
+  if (step === 4) pct = 85;
+  el.querySelector('.si4-fill').style.width = (step * 25) + '%';
+  el.querySelector('.si4-rocket').style.left = pct + '%';
+
+  // Stars
+  var stars = el.querySelector('.si4-stars');
+  stars.innerHTML = '';
+  for (var i = 0; i < step * 3; i++) {
+    var s = document.createElement('span');
+    s.className = 'si4-star';
+    s.textContent = '✦';
+    s.style.left = (Math.random() * pct) + '%';
+    s.style.top = (Math.random() * 100) + '%';
+    s.style.animationDelay = (Math.random() * 2) + 's';
+    s.style.color = ['#FFD700','#ff8ec6','#fff'][Math.floor(Math.random()*3)];
+    stars.appendChild(s);
+  }
+}
+
+/* ⑤ 液体充填 */
+function updateSI5(el, step) {
+  var bottle = el.querySelector('.si5-bottle');
+  bottle.className = 'si5-bottle';
+  if (step > 0) bottle.classList.add('q' + step);
+}
+
+/* ⑥ カウントダウン */
+function updateSI6(el, step) {
+  var badge = el.querySelector('.si6-badge');
+  var remaining = 4 - step;
+  badge.classList.remove('complete');
+  if (step === 0) {
+    badge.textContent = 'あと4問';
+  } else if (step < 4) {
+    badge.textContent = 'あと' + remaining + '問';
+  } else {
+    badge.textContent = '🎁 プレゼントGET！';
+    badge.classList.add('complete');
+  }
+}
+
+/* ⑦ マップ */
+function updateSI7(el, step) {
+  el.querySelectorAll('.si7-node').forEach(function(n) {
+    var num = parseInt(n.dataset.n);
+    n.classList.remove('done','current');
+    if (num < step) n.classList.add('done');
+    else if (num === step) n.classList.add('current');
+  });
+  el.querySelectorAll('.si7-connector').forEach(function(c) {
+    c.classList.toggle('done', parseInt(c.dataset.n) <= step);
+  });
+}
+
+/* ⑧ オーブ */
+function updateSI8(el, step) {
+  el.querySelectorAll('.si8-orb').forEach(function(o) {
+    var n = parseInt(o.dataset.n);
+    o.classList.remove('done','current');
+    if (n < step) o.classList.add('done');
+    else if (n === step) o.classList.add('current');
+  });
+  el.querySelectorAll('.si8-beam').forEach(function(b) {
+    b.classList.toggle('done', parseInt(b.dataset.n) <= step);
+  });
+}
+
+/* ⑨ リボン解き */
+function updateSI9(el, step) {
+  el.className = 'si9';
+  if (step > 0) el.classList.add('step' + step);
+  var label = el.querySelector('.si9-label');
+  if (step === 0) label.textContent = 'リボンをほどこう…';
+  else if (step < 4) label.textContent = 'あと' + (4 - step) + '問…';
+  else label.textContent = '🎁 オープン！';
+}
+
+/* ⑩ サークルゲージ */
+function updateSI10(el, step) {
+  var circumference = 188.5;
+  var offset = circumference - (circumference * step / 4);
+  el.querySelector('.fg').style.strokeDashoffset = offset;
+  el.querySelector('.si10-center').textContent = (step * 25) + '%';
+}
+
+/* ⑪ 花びら */
+function updateSI11(el, step) {
+  el.querySelectorAll('.si11-petal').forEach(function(p) {
+    p.classList.toggle('bloom', parseInt(p.dataset.n) <= step);
+  });
+  el.querySelector('.si11-core').classList.toggle('full', step >= 4);
+  el.querySelector('.si11-status').textContent = step + '/4';
+}
+
+/* ⑫ パーティクルトレイル */
+function updateSI12(el, step) {
+  el.querySelector('.si12-fill').style.width = (step * 25) + '%';
+
+  var particles = el.querySelector('.si12-particles');
+  particles.innerHTML = '';
+  var colors = ['#FFD700','#FB4E93','#ff8ec6','#fff','#ffaa00'];
+  for (var i = 0; i < step * 5; i++) {
+    var p = document.createElement('div');
+    p.className = 'si12-p';
+    p.style.left = (Math.random() * step * 25) + '%';
+    p.style.top = (Math.random() * 100) + '%';
+    p.style.width = (2 + Math.random() * 4) + 'px';
+    p.style.height = p.style.width;
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.opacity = 0.4 + Math.random() * 0.6;
+    p.style.animation = 'starTwinkle ' + (1 + Math.random() * 2) + 's ease infinite';
+    p.style.animationDelay = (Math.random() * 2) + 's';
+    particles.appendChild(p);
+  }
+}
+
+/* ===== 投票機能 ===== */
+var selectedUI = null;
+document.querySelectorAll('.sec').forEach(function(sec) {
+  var name = sec.querySelector('.name').textContent.trim();
+  var tag = sec.querySelector('.tag').textContent.trim();
+  var label = tag + ' ' + name;
+  var btn = document.createElement('button');
+  btn.className = 'vote-btn';
+  btn.textContent = '⭐ これを選ぶ';
+  btn.dataset.ui = label;
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.vote-btn').forEach(function(b) { b.classList.remove('voted'); b.textContent = '⭐ これを選ぶ' });
+    btn.classList.add('voted');
+    btn.textContent = '✅ 選択中！';
+    selectedUI = label;
+    document.getElementById('vn').textContent = label;
+    document.getElementById('vs').classList.add('active');
+  });
+  sec.appendChild(btn);
+});
+
+function submitVote() {
+  if (!selectedUI) return;
+  var vs = document.getElementById('vs');
+  vs.textContent = '✅ 回答しました！ありがとうございます';
+  vs.style.background = '#aaa';
+  vs.disabled = true;
+  // GAS連携は後で設定
+  console.log('Vote:', selectedUI);
+}
+</script>
+
+<div id="vote-bar">
+  <div id="vl">あなたのお気に入りインジケーター</div>
+  <div id="vn">（まだ選択されていません）</div>
+  <button id="vs" onclick="submitVote()">この選択で回答する</button>
+</div>
+
+</body>
+</html>
