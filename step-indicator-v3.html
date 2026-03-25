@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ステップインジケーター v3 - 報酬系特化12種</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--pink:#FB4E93;--gold:#FFD700;--green:#06c755}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Zen Maru Gothic',sans-serif;background:#f8f5f0;color:#333;padding:20px 20px 160px;max-width:480px;margin:0 auto}
+h1{text-align:center;font-size:18px;color:var(--pink);margin-bottom:8px}
+.sub{text-align:center;font-size:11px;color:#999;margin-bottom:24px}
+.intro{background:#fff5f8;border:1.5px solid var(--pink);border-radius:16px;padding:16px;margin-bottom:24px;font-size:12px;line-height:1.8;color:#555;text-align:center}
+.sec{margin-bottom:32px;background:#fff;border-radius:16px;padding:20px 16px;box-shadow:0 4px 20px rgba(0,0,0,.06);overflow:hidden}
+.tag{display:block;text-align:center;font-size:10px;color:#fff;background:var(--pink);border-radius:20px;padding:2px 12px;width:fit-content;margin:0 auto 8px}
+.nm{text-align:center;font-size:14px;font-weight:700;margin-bottom:4px}
+.desc{text-align:center;font-size:11px;color:#888;margin-bottom:16px;line-height:1.5}
+.demo{min-height:80px;display:flex;align-items:center;justify-content:center;padding:20px 12px;background:#fafafa;border-radius:12px;margin-bottom:12px;position:relative;overflow:visible}
+.ctrls{display:flex;gap:6px;justify-content:center}
+.ctrls button{padding:6px 14px;font-size:11px;border:1px solid #ddd;background:#fff;border-radius:20px;cursor:pointer;font-family:inherit;transition:all .2s}
+.ctrls button.active{background:var(--pink);color:#fff;border-color:var(--pink)}
+.ctrls button:hover{border-color:var(--pink)}
+
+/* 共通レイアウト */
+.bw{display:flex;align-items:center;width:100%;gap:8px;position:relative}
+/* バー共通 */
+.trk{flex:1;height:14px;background:#eee;border-radius:7px;overflow:hidden;position:relative}
+.fl{height:100%;width:0;border-radius:7px;transition:width .6s cubic-bezier(.4,0,.2,1);background:linear-gradient(90deg,#ffb3d0,var(--pink))}
+.trk::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);background-size:200% 100%;animation:shm 2s linear infinite}
+@keyframes shm{0%{background-position:200% 0}100%{background-position:-200% 0}}
+/* セグメント共通 */
+.sgw{flex:1;display:flex;gap:4px}
+.sg{flex:1;height:14px;border-radius:4px;background:#eee;transition:all .4s cubic-bezier(.4,0,.2,1)}
+.sg.on{background:var(--pink);box-shadow:0 2px 8px rgba(251,78,147,.3)}
+.sg.pop{animation:sgP .4s ease}
+@keyframes sgP{0%{transform:scaleY(1)}50%{transform:scaleY(1.5)}100%{transform:scaleY(1)}}
+
+/* gift共通 */
+.g{width:36px;height:36px;flex-shrink:0;transition:all .5s cubic-bezier(.4,0,.2,1);position:relative;z-index:2}
+/* confetti container */
+.confetti-wrap{position:absolute;right:0;top:0;bottom:0;width:60px;pointer-events:none;overflow:visible;z-index:10}
+
+/* 投票 */
+.vote-btn{display:block;width:100%;margin-top:12px;padding:10px;font-size:13px;font-family:inherit;background:var(--pink);color:#fff;border:none;border-radius:20px;cursor:pointer;opacity:.85;transition:opacity .2s,transform .2s}
+.vote-btn.voted{opacity:1;transform:scale(1.03);box-shadow:0 4px 12px rgba(251,78,147,.4)}
+#vote-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;box-shadow:0 -4px 20px rgba(0,0,0,.12);padding:12px 20px 28px;z-index:100;text-align:center}
+#vl{font-size:11px;color:#999;margin-bottom:4px}
+#vn{font-size:14px;font-weight:700;color:var(--pink);margin-bottom:10px;min-height:20px}
+#vs{width:100%;padding:12px;font-size:14px;font-family:inherit;background:var(--green);color:#fff;border:none;border-radius:20px;cursor:pointer;opacity:.4;transition:opacity .2s}
+#vs.active{opacity:1}
+
+/* ============================================
+   ① 段階色づき（グラデーション）
+   プレゼントが25%ずつ色を取り戻す
+   ============================================ */
+.si1 .g{filter:grayscale(1) opacity(.3)}
+.si1[data-step="1"] .g{filter:grayscale(.75) opacity(.45)}
+.si1[data-step="2"] .g{filter:grayscale(.5) opacity(.6)}
+.si1[data-step="3"] .g{filter:grayscale(.25) opacity(.8)}
+.si1[data-step="4"] .g{filter:grayscale(0) opacity(1);transform:scale(1.15)}
+
+/* ============================================
+   ② 段階色づき（セグメント）
+   ============================================ */
+.si2 .g{filter:grayscale(1) opacity(.3)}
+.si2[data-step="1"] .g{filter:grayscale(.75) opacity(.45)}
+.si2[data-step="2"] .g{filter:grayscale(.5) opacity(.6)}
+.si2[data-step="3"] .g{filter:grayscale(.25) opacity(.8)}
+.si2[data-step="4"] .g{filter:grayscale(0) opacity(1);transform:scale(1.15)}
+
+/* ============================================
+   ③ 成長プレゼント
+   ステップごとに少しずつ大きくなる
+   ============================================ */
+.si3 .g{filter:grayscale(1) opacity(.3);transform:scale(.6)}
+.si3[data-step="1"] .g{filter:grayscale(.6) opacity(.5);transform:scale(.75)}
+.si3[data-step="2"] .g{filter:grayscale(.4) opacity(.65);transform:scale(.9)}
+.si3[data-step="3"] .g{filter:grayscale(.15) opacity(.85);transform:scale(1.05);animation:gWobble .4s ease}
+.si3[data-step="4"] .g{filter:none;opacity:1;transform:scale(1.35);animation:gBigBounce .6s cubic-bezier(.175,.885,.32,1.275)}
+@keyframes gWobble{0%,100%{transform:scale(1.05) rotate(0)}50%{transform:scale(1.1) rotate(3deg)}}
+@keyframes gBigBounce{0%{transform:scale(.9)}40%{transform:scale(1.6)}65%{transform:scale(1.2)}85%{transform:scale(1.4)}100%{transform:scale(1.35)}}
+
+/* ============================================
+   ④ ビヨーン＋バウンス（セグメント）
+   Q4で巨大化→弾む
+   ============================================ */
+.si4 .g{filter:grayscale(1) opacity(.35)}
+.si4[data-step="1"] .g,.si4[data-step="2"] .g,.si4[data-step="3"] .g{filter:grayscale(.3) opacity(.6)}
+.si4[data-step="4"] .g{filter:none;animation:biyoon .8s cubic-bezier(.175,.885,.32,1.275) forwards}
+@keyframes biyoon{0%{transform:scale(1);opacity:.6}20%{transform:scale(.8);opacity:1}50%{transform:scale(1.8)}70%{transform:scale(1.15)}85%{transform:scale(1.45)}100%{transform:scale(1.3)}}
+
+/* ============================================
+   ⑤ キラキラ増加
+   ステップごとにプレゼント周りの星が増える
+   ============================================ */
+.si5 .g{filter:grayscale(1) opacity(.3)}
+.si5[data-step="4"] .g{filter:none;opacity:1;transform:scale(1.2)}
+.si5 .sparkle-ring{position:absolute;right:-12px;top:50%;transform:translateY(-50%);width:60px;height:60px;pointer-events:none}
+.si5 .sparkle-ring .sk{position:absolute;font-size:0;opacity:0;transition:all .4s;animation:none}
+.si5 .sparkle-ring .sk.on{opacity:1;animation:skTwinkle 1s ease infinite}
+@keyframes skTwinkle{0%,100%{opacity:.4;transform:scale(.7)}50%{opacity:1;transform:scale(1.1)}}
+
+/* ============================================
+   ⑥ ゴールドグロー
+   プレゼントが段階的に金色に光り出す
+   ============================================ */
+.si6 .g{filter:grayscale(1) opacity(.3)}
+.si6[data-step="1"] .g{filter:grayscale(.7) opacity(.5)}
+.si6[data-step="2"] .g{filter:grayscale(.4) opacity(.7);filter:drop-shadow(0 0 2px rgba(255,215,0,.3))}
+.si6[data-step="3"] .g{filter:grayscale(.1) opacity(.9);filter:drop-shadow(0 0 6px rgba(255,215,0,.5));animation:goldPulse 1s ease infinite alternate}
+.si6[data-step="4"] .g{filter:drop-shadow(0 0 12px rgba(255,215,0,.8)) drop-shadow(0 0 24px rgba(255,215,0,.4));opacity:1;transform:scale(1.25);animation:goldBurst .6s ease}
+@keyframes goldPulse{0%{filter:drop-shadow(0 0 4px rgba(255,215,0,.3))}100%{filter:drop-shadow(0 0 10px rgba(255,215,0,.7))}}
+@keyframes goldBurst{0%{transform:scale(1)}50%{transform:scale(1.5)}100%{transform:scale(1.25)}}
+
+/* ============================================
+   ⑦ ハートビート
+   Q3からドキドキ→Q4で解放
+   ============================================ */
+.si7 .g{filter:grayscale(1) opacity(.3)}
+.si7[data-step="1"] .g,.si7[data-step="2"] .g{filter:grayscale(.5) opacity(.5)}
+.si7[data-step="3"] .g{filter:grayscale(.15) opacity(.85);animation:heartbeat .6s ease infinite}
+.si7[data-step="4"] .g{filter:none;opacity:1;animation:heartExplode .8s cubic-bezier(.175,.885,.32,1.275) forwards}
+@keyframes heartbeat{0%,100%{transform:scale(1)}15%{transform:scale(1.15)}30%{transform:scale(1)}45%{transform:scale(1.1)}}
+@keyframes heartExplode{0%{transform:scale(1)}30%{transform:scale(.85)}60%{transform:scale(1.6)}80%{transform:scale(1.2)}100%{transform:scale(1.35)}}
+
+/* ============================================
+   ⑧ Confetti爆発
+   Q4完了でプレゼント周りに紙吹雪
+   ============================================ */
+.si8 .g{filter:grayscale(1) opacity(.3)}
+.si8[data-step="1"] .g,.si8[data-step="2"] .g,.si8[data-step="3"] .g{filter:grayscale(.4) opacity(.6)}
+.si8[data-step="4"] .g{filter:none;opacity:1;transform:scale(1.25);animation:gBigBounce .6s cubic-bezier(.175,.885,.32,1.275)}
+.cft{position:absolute;width:6px;height:6px;border-radius:1px;opacity:0;z-index:20}
+.cft.go{animation:cftFly .9s cubic-bezier(.2,.8,.3,1) forwards}
+@keyframes cftFly{0%{opacity:1;transform:translate(0,0) rotate(0deg) scale(1)}100%{opacity:0;transform:translate(var(--tx),var(--ty)) rotate(var(--rot)) scale(0)}}
+
+/* ============================================
+   ⑨ シェイク→爆発（セグメント）
+   Q3でブルブル震え、Q4で解放
+   ============================================ */
+.si9 .g{filter:grayscale(1) opacity(.3)}
+.si9[data-step="1"] .g,.si9[data-step="2"] .g{filter:grayscale(.5) opacity(.5)}
+.si9[data-step="3"] .g{filter:grayscale(.2) opacity(.8);animation:preShake .15s ease infinite}
+.si9[data-step="4"] .g{filter:none;opacity:1;animation:shakeExplode .7s ease forwards}
+@keyframes preShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-2px) rotate(-2deg)}75%{transform:translateX(2px) rotate(2deg)}}
+@keyframes shakeExplode{0%{transform:translateX(0) scale(1)}10%{transform:translateX(-3px) rotate(-5deg) scale(.95)}20%{transform:translateX(3px) rotate(5deg) scale(.95)}35%{transform:scale(.8)}60%{transform:scale(1.6) rotate(0)}80%{transform:scale(1.2)}100%{transform:scale(1.3)}}
+
+/* ============================================
+   ⑩ オーラ拡大
+   プレゼント背景にオーラが段階的に広がる
+   ============================================ */
+.si10 .g-wrap{position:relative;flex-shrink:0;width:36px;height:36px}
+.si10 .g-wrap .g{position:relative;z-index:2}
+.si10 .aura{position:absolute;inset:-8px;border-radius:50%;background:radial-gradient(circle,rgba(251,78,147,.3),transparent 70%);transform:scale(0);transition:all .5s cubic-bezier(.4,0,.2,1);z-index:1}
+.si10[data-step="1"] .aura{transform:scale(.5);opacity:.3}
+.si10[data-step="2"] .aura{transform:scale(.8);opacity:.5}
+.si10[data-step="3"] .aura{transform:scale(1.2);opacity:.7;background:radial-gradient(circle,rgba(255,215,0,.3),rgba(251,78,147,.2),transparent 70%);animation:auraPulse 1.2s ease infinite alternate}
+.si10[data-step="4"] .aura{transform:scale(1.8);opacity:1;background:radial-gradient(circle,rgba(255,215,0,.5),rgba(251,78,147,.3),transparent 70%);animation:auraExplode .6s ease}
+@keyframes auraPulse{0%{transform:scale(1.1)}100%{transform:scale(1.4)}}
+@keyframes auraExplode{0%{transform:scale(.8)}50%{transform:scale(2.2)}100%{transform:scale(1.8)}}
+.si10 .g{filter:grayscale(1) opacity(.3)}
+.si10[data-step="1"] .g{filter:grayscale(.7) opacity(.5)}
+.si10[data-step="2"] .g{filter:grayscale(.4) opacity(.7)}
+.si10[data-step="3"] .g{filter:grayscale(.15) opacity(.85)}
+.si10[data-step="4"] .g{filter:none;opacity:1;transform:scale(1.2)}
+
+/* ============================================
+   ⑪ アンラップ（包装が剥がれる）
+   覆いが段階的にスライドして中身が見える
+   ============================================ */
+.si11 .g-wrap{position:relative;flex-shrink:0;width:40px;height:40px;overflow:hidden;border-radius:4px}
+.si11 .g-wrap .g{width:100%;height:100%;position:relative;z-index:1}
+.si11 .wrap-cover{position:absolute;inset:0;background:linear-gradient(135deg,#ddd,#bbb);z-index:3;transition:all .5s cubic-bezier(.4,0,.2,1);border-radius:4px}
+.si11[data-step="1"] .wrap-cover{clip-path:inset(0 0 0 25%)}
+.si11[data-step="2"] .wrap-cover{clip-path:inset(0 0 0 50%)}
+.si11[data-step="3"] .wrap-cover{clip-path:inset(0 0 0 75%);opacity:.6}
+.si11[data-step="4"] .wrap-cover{clip-path:inset(0 0 0 100%);opacity:0}
+.si11 .g{filter:none;opacity:1}
+.si11[data-step="4"] .g{animation:unwrapPop .5s ease}
+@keyframes unwrapPop{0%{transform:scale(1)}50%{transform:scale(1.3) rotate(5deg)}100%{transform:scale(1.15)}}
+
+/* ============================================
+   ⑫ フルコンボ（成長＋グロー＋confetti＋バウンス）
+   ============================================ */
+.si12 .g{filter:grayscale(1) opacity(.3);transform:scale(.6)}
+.si12[data-step="1"] .g{filter:grayscale(.6) opacity(.5);transform:scale(.75)}
+.si12[data-step="2"] .g{filter:grayscale(.3) opacity(.7);transform:scale(.9);filter:drop-shadow(0 0 3px rgba(255,215,0,.3))}
+.si12[data-step="3"] .g{filter:grayscale(.1) opacity(.85);transform:scale(1.05);filter:drop-shadow(0 0 8px rgba(255,215,0,.5));animation:heartbeat .6s ease infinite}
+.si12[data-step="4"] .g{filter:drop-shadow(0 0 14px rgba(255,215,0,.9)) drop-shadow(0 0 28px rgba(251,78,147,.4));opacity:1;animation:fullCombo .8s cubic-bezier(.175,.885,.32,1.275) forwards}
+@keyframes fullCombo{0%{transform:scale(1)}20%{transform:scale(.8) rotate(-5deg)}50%{transform:scale(1.7) rotate(3deg)}70%{transform:scale(1.2) rotate(-2deg)}85%{transform:scale(1.5) rotate(1deg)}100%{transform:scale(1.35) rotate(0)}}
+</style>
+</head>
+<body>
+
+<h1>ステップインジケーター v3</h1>
+<p class="sub">報酬系特化 - プレゼント演出12パターン</p>
+<div class="intro">
+ベース：シンプルグラデーション or セグメント分割<br>
+プレゼントの色づき・成長・爆発など<br>
+<strong>「もうすぐもらえる！」</strong>の期待感を最大化する演出集
+</div>
+
+<svg style="display:none">
+  <symbol id="gs" viewBox="0 0 64 64">
+    <rect x="8" y="28" width="48" height="28" rx="4" fill="#FB4E93"/>
+    <rect x="4" y="24" width="56" height="12" rx="4" fill="#ff6baf"/>
+    <rect x="28" y="24" width="8" height="32" fill="#FFD700"/>
+    <path d="M32 24c0 0-8-14-16-10s4 10 16 10" fill="#FFD700" opacity=".9"/>
+    <path d="M32 24c0 0 8-14 16-10s-4 10-16 10" fill="#ffaa00" opacity=".9"/>
+    <rect x="4" y="24" width="56" height="4" fill="rgba(255,255,255,.15)"/>
+  </symbol>
+</svg>
+
+<!-- ① 段階色づき（グラデーション） -->
+<div class="sec" data-id="1">
+<span class="tag">①</span>
+<div class="nm">段階色づき（グラデーション）</div>
+<p class="desc">ステップごとにプレゼントの色が25%ずつ戻る</p>
+<div class="demo">
+  <div class="si1 bw" data-step="0">
+    <div class="trk"><div class="fl"></div></div>
+    <svg class="g"><use href="#gs"/></svg>
+  </div>
+</div>
+<div class="ctrls"><button onclick="go(this,0)">リセット</button><button onclick="go(this,1)">Q1</button><button onclick="go(this,2)">Q2</button><button onclick="go(this,3)">Q3</button><button onclick="go(this,4)">Q4</button></div>
+</div>
+
+<!-- ② 段階色づき（セグメント） -->
+<div class="sec" data-id="2">
+<span class="tag">②</span>
+<div class="nm">段階色づき（セグメント）</div>
+<p class="desc">セグメント版。ブロック点灯に合わせてプレゼントも色づく</p>
+<div class="demo">
+  <div class="si2 bw" data-step="0">
+    <div class="sgw"><div class="sg" data-n="1"></div><div class="sg" data-n="2"></div><div class="sg" data-n="3"></div><div class="sg" data-n="4"></div></div>
+    <svg class="g"><use href="#gs"/></svg>
+  </div>
+</div>
+<div class="ctrls"><button onclick="go(this,0)">リセット</button><button onclick="go(this,1)">Q1</button><button onclick="go(this,2)">Q2</button><button onclick="go(this,3)">Q3</button><button onclick="go(this,4)">Q4</button></div>
+</div>
+
+<!-- ③ 成長プレゼント -->
+<div class="sec" data-id="3">
+<span class="tag">③</span>
+<div class="nm">成長プレゼント</div>
+<p class="desc">ステップごとにプレゼントが大きくなり、Q4でビヨーン</p>
+<div class="demo">
+  <div class="si3 bw" data-step="0">
+    <div class="trk"><div class="fl"></div></div>
+    <svg class="g"><use href="#gs"/></svg>
+  </div>
+</div>
+<div class="ctrls"><button onclick="go(this,0)">リセット</button><button onclick="go(this,1)">Q1</button><button onclick="go(this,2)">Q2</button><button onclick="go(this,3)">Q3</button><button onclick="go(this,4)">Q4</button></div>
+</div>
+
+<!-- ④ ビヨーン＋バウンス（セグメント） -->
+<div class="sec" data-id="4">
+<span class="tag">④</span>
+<div class="nm">ビヨーン＋バウンス</div>
+<p class="desc">Q4完了でプレゼントが一旦縮んでからビヨーンと巨大化</p>
+<div class="demo">
+  <div class="si4 bw" data-step="0">
+    <div class="sgw"><div class="sg" data-n="1"></div><div class="sg" data-n="2"></div><div class="sg" data-n="3"></div><div class="sg" data-n="4"></div></div>
+    <svg class="g"><use href="#gs"/></svg>
+  </div>
+</div>
+<div class="ctrls"><button onclick="go(this,0)">リセット</button><button onclick="go(this,1)">Q1</button><button onclick="go(this,2)">Q2</button><button onclick="go(this,3)">Q3</button><button onclick="go(this,4)">Q4</button></div>
+</div>
+
+<!-- ⑤ キラキラ増加 -->
+<div class="sec" data-id="5">
+<span class="tag">⑤</span>
+<div class="nm">キラキラ増加</div>
+<p class="desc">ステップごとにプレゼント周りの✦が増える</p>
+<div class="demo">
+  <div class="si5 bw" data-step="0">
+    <div class="trk"><div class="fl"></div></div>
+    <svg class="g"><use href="#gs"/></svg>
+    <div class="sparkle-ring">
+      <span class="sk" data-n="1" style="top:0;left:50%;font-size:12px;color:#FFD700">✦</span>
+      <span class="sk" data-n="1" style="top:20%;right:0;font-size:8px;color:#FB4E93">✦</span>
+      <span class="sk" data-n="2" style="bottom:10%;right:5%;font-size:10px;color:#ffaa00">✦</span>
+      <span class="sk" data-n="2" style="bottom:0;left:40%;font-size:8px;color:#ff8ec6">✦</span>
+      <span class="sk" data-n="3" style="top:30%;left:0;font-size:11px;color:#FFD700">✦</span>
+      <span class="sk" data-n="3" style="top:10%;left:20%;font-size:7px;color:#FB4E93">✦</span>
+      <span class="sk" data-n="4" style="bottom:20%;left:10%;font-size:9px;color:#ffaa00">✦</span>
+      <span class="sk" data-n="4" style="top:50%;right:0;font-size:12px;color:#FFD700">✦</span>
+    </div>
+  </div>
+</div>
+<div class="ctrls"><button onclick="go(this,0)">リセット</button><button onclick="go(this,1)">Q1</button><button onclick="go(this,2)">Q2</button><button onclick="go(this,3)">Q3</button><button onclick="go(this,4)">Q4</button></div>
+</div>
+
+<!-- ⑥ ゴールドグロー -->
+<div class="sec" data-id="6">
+<span class="tag">⑥</span>
+<div class="nm">ゴールドグロー</div>
+<p class="desc">プレゼントが段階的にゴールドに発光していく</p>
+<div class="demo">
+  <div class="si6 bw" data-step="0">
+    <div class="sgw"><div class="sg" data-n="1"></div><div class="sg" data-n="2"></div><div class="sg" data-n="3"></div><div class="sg" data-n="4"></div></div>
+    <svg class="g"><use href="#gs"/></svg>
+  </div>
+</div>
+<div class="ctrls"><button onclick="go(this,0)">リセット</button><button onclick="go(this,1)">Q1</button><button onclick="go(this,2)">Q2</button><button onclick="go(this,3)">Q3</button><button onclick="go(this,4)">Q4</button></div>
+</div>
+
+<!-- ⑦ ハートビート -->
+<div class="sec" data-id="7">
+<span class="tag">⑦</span>
+<div class="nm">ハートビート</div>
+<p class="desc">Q3からドキドキ鼓動。Q4で一気に解放される</p>
+<div class="demo">
+  <div class="si7 bw" data-step="0">
+    <div class="trk"><div class="fl"></div></div>
+    <svg class="g"><use href="#gs"/></svg>
+  </div>
+</div>
+<div class="ctrls"><button onclick="go(this,0)">リセット</button><button onclick="go(this,1)">Q1</button><button onclick="go(this,2)">Q2</button><button onclick="go(this,3)">Q3</button><button onclick="go(this,4)">Q4</button></div>
+</div>
+
+<!-- ⑧ Confetti爆発 -->
+<div class="sec" data-id="8">
+<span class="tag">⑧</span>
+<div class="nm">Confetti爆発</div>
+<p class="desc">Q4完了で紙吹雪がプレゼントから飛び散る</p>
+<div class="demo">
+  <div class="si8 bw" data-step="0">
+    <div class="sgw"><div class="sg" data-n="1"></div><div class="sg" data-n="2"></div><div class="sg" data-n="3"></div><div class="sg" data-n="4"></div></div>
+    <svg class="g"><use href="#gs"/></svg>
+    <div class="confetti-wrap"></div>
+  </div>
+</div>
+<div class="ctrls"><button onclick="go(this,0)">リセット</button><button onclick="go(this,1)">Q1</button><button onclick="go(this,2)">Q2</button><button onclick="go(this,3)">Q3</button><button onclick="go(this,4)">Q4</button></div>
+</div>
+
+<!-- ⑨ シェイク→爆発 -->
+<div class="sec" data-id="9">
+<span class="tag">⑨</span>
+<div class="nm">シェイク→爆発</div>
+<p class="desc">Q3でブルブル震え始め、Q4で爆発的に拡大</p>
+<div class="demo">
+  <div class="si9 bw" data-step="0">
+    <div class="trk"><div class="fl"></div></div>
+    <svg class="g"><use href="#gs"/></svg>
+  </div>
+</div>
+<div class="ctrls"><button onclick="go(this,0)">リセット</button><button onclick="go(this,1)">Q1</button><button onclick="go(this,2)">Q2</button><button onclick="go(this,3)">Q3</button><button onclick="go(this,4)">Q4</button></div>
+</div>
+
+<!-- ⑩ オーラ拡大 -->
+<div class="sec" data-id="10">
+<span class="tag">⑩</span>
+<div class="nm">オーラ拡大</div>
+<p class="desc">プレゼント背後にオーラが段階的に広がっていく</p>
+<div class="demo">
+  <div class="si10 bw" data-step="0">
+    <div class="sgw"><div class="sg" data-n="1"></div><div class="sg" data-n="2"></div><div class="sg" data-n="3"></div><div class="sg" data-n="4"></div></div>
+    <div class="g-wrap"><svg class="g"><use href="#gs"/></svg><div class="aura"></div></div>
+  </div>
+</div>
+<div class="ctrls"><button onclick="go(this,0)">リセット</button><button onclick="go(this,1)">Q1</button><button onclick="go(this,2)">Q2</button><button onclick="go(this,3)">Q3</button><button onclick="go(this,4)">Q4</button></div>
+</div>
+
+<!-- ⑪ アンラップ -->
+<div class="sec" data-id="11">
+<span class="tag">⑪</span>
+<div class="nm">アンラップ</div>
+<p class="desc">グレーの包装紙がステップごとにスライドして剥がれる</p>
+<div class="demo">
+  <div class="si11 bw" data-step="0">
+    <div class="trk"><div class="fl"></div></div>
+    <div class="g-wrap"><svg class="g"><use href="#gs"/></svg><div class="wrap-cover"></div></div>
+  </div>
+</div>
+<div class="ctrls"><button onclick="go(this,0)">リセット</button><button onclick="go(this,1)">Q1</button><button onclick="go(this,2)">Q2</button><button onclick="go(this,3)">Q3</button><button onclick="go(this,4)">Q4</button></div>
+</div>
+
+<!-- ⑫ フルコンボ -->
+<div class="sec" data-id="12">
+<span class="tag">⑫</span>
+<div class="nm">フルコンボ</div>
+<p class="desc">成長＋グロー＋ドキドキ＋紙吹雪の全部載せ</p>
+<div class="demo">
+  <div class="si12 bw" data-step="0">
+    <div class="sgw"><div class="sg" data-n="1"></div><div class="sg" data-n="2"></div><div class="sg" data-n="3"></div><div class="sg" data-n="4"></div></div>
+    <svg class="g"><use href="#gs"/></svg>
+    <div class="confetti-wrap"></div>
+  </div>
+</div>
+<div class="ctrls"><button onclick="go(this,0)">リセット</button><button onclick="go(this,1)">Q1</button><button onclick="go(this,2)">Q2</button><button onclick="go(this,3)">Q3</button><button onclick="go(this,4)">Q4</button></div>
+</div>
+
+<script>
+function go(btn,step){
+  var sec=btn.closest('.sec'),id=sec.dataset.id,w=sec.querySelector('[data-step]');
+  // Re-trigger animation by removing data-step first
+  var prevStep=parseInt(w.dataset.step)||0;
+  w.dataset.step=step;
+  sec.querySelectorAll('.ctrls button').forEach(function(b,i){b.classList.toggle('active',i===step)});
+  var pct=step*25;
+
+  // バー更新（グラデーション系）
+  var fl=w.querySelector('.fl');
+  if(fl)fl.style.width=pct+'%';
+
+  // セグメント更新
+  w.querySelectorAll('.sg').forEach(function(s){
+    var n=parseInt(s.dataset.n);
+    s.classList.remove('on','pop');
+    if(n<=step){s.classList.add('on');if(n===step&&step>0)s.classList.add('pop')}
+  });
+
+  // ⑤ キラキラ
+  if(id==='5'){
+    w.querySelectorAll('.sk').forEach(function(s){
+      s.classList.toggle('on',parseInt(s.dataset.n)<=step);
+    });
+  }
+
+  // ⑧⑫ Confetti
+  if((id==='8'||id==='12')&&step===4&&prevStep!==4){
+    fireConfetti(w.querySelector('.confetti-wrap'));
+  }
+  if((id==='8'||id==='12')&&step!==4){
+    var cw=w.querySelector('.confetti-wrap');if(cw)cw.innerHTML='';
+  }
+
+  // re-trigger CSS animation on gift
+  var g=w.querySelector('.g');
+  if(g&&step!==prevStep){
+    g.style.animation='none';
+    g.offsetHeight;// reflow
+    g.style.animation='';
+  }
+}
+
+function fireConfetti(container){
+  container.innerHTML='';
+  var colors=['#FB4E93','#FFD700','#ff8ec6','#69db7c','#4dabf7','#ffa94d','#e040fb','#fff'];
+  for(var i=0;i<30;i++){
+    var c=document.createElement('div');
+    c.className='cft';
+    var angle=Math.random()*Math.PI*2;
+    var dist=40+Math.random()*60;
+    c.style.setProperty('--tx',(Math.cos(angle)*dist)+'px');
+    c.style.setProperty('--ty',(Math.sin(angle)*dist-30)+'px');
+    c.style.setProperty('--rot',(Math.random()*720-360)+'deg');
+    c.style.background=colors[Math.floor(Math.random()*colors.length)];
+    c.style.left='50%';
+    c.style.top='50%';
+    c.style.width=(4+Math.random()*5)+'px';
+    c.style.height=(4+Math.random()*5)+'px';
+    c.style.borderRadius=Math.random()>.5?'50%':'1px';
+    container.appendChild(c);
+    // trigger
+    requestAnimationFrame(function(){
+      c.classList.add('go');
+    });
+    (function(el){setTimeout(function(){el.remove()},1000)})(c);
+  }
+}
+
+/* 投票 */
+var sel=null;
+document.querySelectorAll('.sec').forEach(function(sec){
+  var nm=sec.querySelector('.nm').textContent.trim();
+  var tg=sec.querySelector('.tag').textContent.trim();
+  var lb=tg+' '+nm;
+  var b=document.createElement('button');b.className='vote-btn';b.textContent='⭐ これを選ぶ';b.dataset.ui=lb;
+  b.addEventListener('click',function(){
+    document.querySelectorAll('.vote-btn').forEach(function(x){x.classList.remove('voted');x.textContent='⭐ これを選ぶ'});
+    b.classList.add('voted');b.textContent='✅ 選択中！';sel=lb;
+    document.getElementById('vn').textContent=lb;document.getElementById('vs').classList.add('active');
+  });
+  sec.appendChild(b);
+});
+function submitVote(){
+  if(!sel)return;var vs=document.getElementById('vs');
+  vs.textContent='✅ 回答しました！ありがとうございます';vs.style.background='#aaa';vs.disabled=true;
+  console.log('Vote:',sel);
+}
+</script>
+
+<div id="vote-bar">
+  <div id="vl">あなたのお気に入りインジケーター</div>
+  <div id="vn">（まだ選択されていません）</div>
+  <button id="vs" onclick="submitVote()">この選択で回答する</button>
+</div>
+
+</body>
+</html>
